@@ -6,7 +6,7 @@ This script demonstrates how to use the BoletoExtractor class
 programmatically in your own Python applications.
 """
 
-from boleto_extractor import BoletoExtractor
+from boleto_extractor import BoletoExtractor, extract_boleto_numbers, find_boleto_numbers_in_text, is_valid_boleto_number
 import sys
 
 def example_usage():
@@ -70,6 +70,37 @@ def example_usage():
         print("\n3. To extract from a PDF file, run:")
         print("   python example_usage.py path/to/boleto.pdf")
 
+def example_convenience_functions():
+    """Demonstrate the convenience functions."""
+    
+    print("\n" + "=" * 55)
+    print("Convenience Functions Example")
+    print("=" * 55)
+    
+    # Example 1: Using convenience functions
+    print("\n1. Using convenience functions:")
+    
+    # Extract from text using convenience function
+    text = "Boleto: 00193373700000001000500940144816060680935031"
+    numbers = find_boleto_numbers_in_text(text)
+    print(f"Text: {text}")
+    print(f"Found numbers: {numbers}")
+    
+    # Validate using convenience function
+    number = "00193373700000001000500940144816060680935031"
+    is_valid = is_valid_boleto_number(number)
+    print(f"Number {number} is valid: {is_valid}")
+    
+    # Example 2: PDF extraction using convenience function
+    if len(sys.argv) > 1:
+        pdf_path = sys.argv[1]
+        print(f"\n2. Extracting from PDF using convenience function:")
+        try:
+            numbers = extract_boleto_numbers(pdf_path)
+            print(f"Found {len(numbers)} boleto number(s) in {pdf_path}")
+        except Exception as e:
+            print(f"Error: {e}")
+
 def batch_processing_example():
     """Example of processing multiple PDF files."""
     
@@ -113,4 +144,5 @@ def batch_processing_example():
 
 if __name__ == "__main__":
     example_usage()
+    example_convenience_functions()
     batch_processing_example() 

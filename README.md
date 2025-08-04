@@ -20,10 +20,29 @@ A Python script to extract boleto numbers from Brazilian boleto PDF files. This 
 
 ### Setup
 
+#### Option 1: Install as a Package (Recommended)
+
+1. **Install from PyPI (when available):**
+   ```bash
+   pip install boleto-extractor
+   ```
+
+2. **Install from GitHub:**
+   ```bash
+   pip install git+https://github.com/pedrinho/boleto_extractor.git
+   ```
+
+3. **Install zbar (for barcode reading):**
+   - **macOS:** `brew install zbar`
+   - **Ubuntu/Debian:** `sudo apt-get install libzbar0`
+   - **Windows:** Download from [zbar releases](https://github.com/NaturalHistoryMuseum/pyzbar/releases)
+
+#### Option 2: Install from Source
+
 1. **Clone or download this repository:**
    ```bash
-   git clone <repository-url>
-   cd boleto
+   git clone https://github.com/pedrinho/boleto_extractor.git
+   cd boleto_extractor
    ```
 
 2. **Create a virtual environment (recommended):**
@@ -32,9 +51,9 @@ A Python script to extract boleto numbers from Brazilian boleto PDF files. This 
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. **Install dependencies:**
+3. **Install the package:**
    ```bash
-   pip install -r requirements.txt
+   pip install -e .
    ```
 
 4. **Install zbar (for barcode reading):**
@@ -44,36 +63,66 @@ A Python script to extract boleto numbers from Brazilian boleto PDF files. This 
 
 ## Usage
 
-### Basic Usage
+### As a Library
 
-```bash
-python boleto_extractor.py path/to/boleto.pdf
+```python
+from boleto_extractor import BoletoExtractor, extract_boleto_numbers
+
+# Method 1: Using the class
+extractor = BoletoExtractor()
+numbers = extractor.extract_boleto_numbers("boleto.pdf")
+
+# Method 2: Using convenience function
+numbers = extract_boleto_numbers("boleto.pdf")
+
+# Extract from text
+from boleto_extractor import find_boleto_numbers_in_text
+text = "Boleto: 00193373700000001000500940144816060680935031"
+numbers = find_boleto_numbers_in_text(text)
+
+# Validate boleto numbers
+from boleto_extractor import is_valid_boleto_number
+is_valid = is_valid_boleto_number("00193373700000001000500940144816060680935031")
 ```
 
-### Advanced Usage
+### Command Line Interface
+
+#### Basic Usage
+
+```bash
+boleto-extractor path/to/boleto.pdf
+```
+
+#### Advanced Usage
 
 ```bash
 # With verbose logging
-python boleto_extractor.py boleto.pdf --verbose
+boleto-extractor boleto.pdf --verbose
 
 # With formatted output
-python boleto_extractor.py boleto.pdf --format
+boleto-extractor boleto.pdf --format
 
 # Both verbose and formatted
-python boleto_extractor.py boleto.pdf --verbose --format
+boleto-extractor boleto.pdf --verbose --format
 ```
 
-### Examples
+#### Examples
 
 ```bash
 # Extract from a local PDF file
-python boleto_extractor.py /Users/pedro/Downloads/boleto.pdf
+boleto-extractor /Users/pedro/Downloads/boleto.pdf
 
 # Extract with formatted output
-python boleto_extractor.py boleto.pdf --format
+boleto-extractor boleto.pdf --format
 
 # Extract with detailed logging
-python boleto_extractor.py boleto.pdf --verbose
+boleto-extractor boleto.pdf --verbose
+```
+
+### Legacy Script (Backward Compatibility)
+
+```bash
+python boleto_extractor.py path/to/boleto.pdf
 ```
 
 ## Output Examples

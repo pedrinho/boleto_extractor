@@ -5,7 +5,7 @@ Test script for the Brazilian Boleto Number Extractor
 This script demonstrates how the boleto extractor works with sample data.
 """
 
-from boleto_extractor import BoletoExtractor
+from boleto_extractor import BoletoExtractor, find_boleto_numbers_in_text, is_valid_boleto_number
 
 def test_boleto_extractor():
     """Test the boleto extractor with sample data."""
@@ -69,5 +69,27 @@ def test_boleto_extractor():
         status = "✓ Valid" if is_valid else "✗ Invalid"
         print(f"{status}: {number}")
 
+def test_package_functions():
+    """Test the convenience functions from the package."""
+    
+    print("\n" + "=" * 50)
+    print("Testing Package Convenience Functions")
+    print("=" * 50)
+    
+    # Test convenience functions
+    sample_text = "Boleto: 00193373700000001000500940144816060680935031"
+    
+    print(f"\nTesting find_boleto_numbers_in_text():")
+    print(f"Input: {sample_text}")
+    numbers = find_boleto_numbers_in_text(sample_text)
+    print(f"Result: {numbers}")
+    
+    print(f"\nTesting is_valid_boleto_number():")
+    test_number = "00193373700000001000500940144816060680935031"
+    is_valid = is_valid_boleto_number(test_number)
+    print(f"Number: {test_number}")
+    print(f"Valid: {is_valid}")
+
 if __name__ == "__main__":
-    test_boleto_extractor() 
+    test_boleto_extractor()
+    test_package_functions() 
