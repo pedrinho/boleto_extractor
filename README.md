@@ -11,6 +11,7 @@ A Python tool to extract boleto numbers from Brazilian boleto PDF files. This to
 - **PDF Processing**: Handles both text-based and image-based PDFs
 - **Encrypted PDF Support**: Attempts to decrypt password-protected PDFs
 - **Brazilian Format Output**: Option to display boleto numbers in proper Brazilian "linha digitável" format
+- **Clipboard Copy**: Option to copy boleto numbers directly to clipboard for easy pasting
 - **Clean Output**: No numbering or extra formatting in results
 
 ## Installation
@@ -39,6 +40,8 @@ A Python tool to extract boleto numbers from Brazilian boleto PDF files. This to
    - **Ubuntu/Debian:** `sudo apt-get install libzbar0`
    - **Windows:** Download from [zbar releases](https://github.com/NaturalHistoryMuseum/pyzbar/releases)
 
+4. **Clipboard functionality:** The clipboard copy feature requires `pyperclip` which is automatically installed with the package.
+
 #### Option 2: Install from Source
 
 1. **Clone or download this repository:**
@@ -62,6 +65,8 @@ A Python tool to extract boleto numbers from Brazilian boleto PDF files. This to
    - **macOS:** `brew install zbar`
    - **Ubuntu/Debian:** `sudo apt-get install libzbar0`
    - **Windows:** Download from [zbar releases](https://github.com/NaturalHistoryMuseum/pyzbar/releases)
+
+5. **Clipboard functionality:** The clipboard copy feature requires `pyperclip` which is automatically installed with the package.
 
 ## Usage
 
@@ -103,6 +108,9 @@ boleto-extractor boleto.pdf --verbose
 # With Brazilian format output
 boleto-extractor boleto.pdf --format
 
+# Copy to clipboard
+boleto-extractor boleto.pdf --clipboard
+
 # Both verbose and formatted
 boleto-extractor boleto.pdf --verbose --format
 
@@ -110,7 +118,7 @@ boleto-extractor boleto.pdf --verbose --format
 boleto-extractor encrypted.pdf --password mypassword
 
 # Extract from encrypted PDF with all options
-boleto-extractor encrypted.pdf --password mypassword --verbose --format
+boleto-extractor encrypted.pdf --password mypassword --verbose --format --clipboard
 ```
 
 #### Examples
@@ -122,6 +130,9 @@ boleto-extractor /Users/pedro/Downloads/boleto.pdf
 # Extract with Brazilian format output
 boleto-extractor boleto.pdf --format
 
+# Copy boleto number to clipboard
+boleto-extractor boleto.pdf --clipboard
+
 # Extract with detailed logging
 boleto-extractor boleto.pdf --verbose
 
@@ -129,7 +140,7 @@ boleto-extractor boleto.pdf --verbose
 boleto-extractor encrypted.pdf --password mypassword
 
 # Extract from encrypted PDF with all options
-boleto-extractor encrypted.pdf --password mypassword --verbose --format
+boleto-extractor encrypted.pdf --password mypassword --verbose --format --clipboard
 ```
 
 ## Output Examples
@@ -148,6 +159,24 @@ Found 1 boleto number(s):
 --------------------------------------------------
 19790.00005 04572.84935 66277.10356 4 9711690000038600
 --------------------------------------------------
+```
+
+### Clipboard Output
+```
+Found 1 boleto number(s):
+--------------------------------------------------
+19790000050457284935662771035649711690000038600
+--------------------------------------------------
+✓ Copied to clipboard: 19790000050457284935662771035649711690000038600
+```
+
+### Formatted Output with Clipboard
+```
+Found 1 boleto number(s):
+--------------------------------------------------
+19790.00005 04572.84935 66277.10356 4 9711690000038600
+--------------------------------------------------
+✓ Copied to clipboard: 19790.00005 04572.84935 66277.10356 4 9711690000038600
 ```
 
 ## Supported Boleto Formats
@@ -256,6 +285,11 @@ With Brazilian format:
 boleto-extractor boleto.pdf --format
 ```
 
+Copy to clipboard:
+```bash
+boleto-extractor boleto.pdf --clipboard
+```
+
 With password for encrypted PDFs:
 ```bash
 boleto-extractor encrypted.pdf --password mypassword
@@ -268,7 +302,7 @@ boleto-extractor boleto.pdf --verbose
 
 Combined options:
 ```bash
-boleto-extractor encrypted.pdf --password mypassword --verbose --format
+boleto-extractor encrypted.pdf --password mypassword --verbose --format --clipboard
 ```
 
 ## Dependencies
@@ -280,6 +314,7 @@ boleto-extractor encrypted.pdf --password mypassword --verbose --format
 - **pyzbar**: Barcode reading
 - **Pillow**: Image handling
 - **numpy**: Numerical operations
+- **pyperclip**: Clipboard functionality (for copy to clipboard feature)
 
 ## Contributing
 
