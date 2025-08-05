@@ -23,24 +23,19 @@ A Python tool to extract boleto numbers from Brazilian boleto PDF files. This to
 
 ### Setup
 
-#### Option 1: Install as a Package (Recommended)
+#### Option 1: Install from GitHub (Recommended)
 
-1. **Install from PyPI (when available):**
-   ```bash
-   pip install boleto-extractor
-   ```
-
-2. **Install from GitHub:**
+1. **Install from GitHub:**
    ```bash
    pip install git+https://github.com/pedrinho/boleto_extractor.git
    ```
 
-3. **Install zbar (for barcode reading):**
+2. **Install zbar (for barcode reading):**
    - **macOS:** `brew install zbar`
    - **Ubuntu/Debian:** `sudo apt-get install libzbar0`
    - **Windows:** Download from [zbar releases](https://github.com/NaturalHistoryMuseum/pyzbar/releases)
 
-4. **Clipboard functionality:** The clipboard copy feature requires `pyperclip` which is automatically installed with the package.
+3. **Clipboard functionality:** The clipboard copy feature requires `pyperclip` which is automatically installed with the package.
 
 #### Option 2: Install from Source
 
