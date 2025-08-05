@@ -1,15 +1,17 @@
 # Brazilian Boleto Number Extractor
 
-A Python script to extract boleto numbers from Brazilian boleto PDF files. This tool uses multiple methods to ensure maximum accuracy in extracting boleto numbers from various PDF formats.
+A Python tool to extract boleto numbers from Brazilian boleto PDF files. This tool reads 44-digit barcodes from PDFs and converts them to the standard 47-digit "linha digitável" format used for payments.
 
 ## Features
 
-- **Multiple Extraction Methods**: Text extraction, barcode scanning, and pattern matching
-- **Support for Different Formats**: 44-digit and 47-digit boleto numbers
-- **Barcode Detection**: Reads Code 128, Code 39, and other common barcode formats
+- **Barcode-Focused Extraction**: Primarily reads 44-digit barcodes from PDFs
+- **Automatic Conversion**: Converts 44-digit barcodes to 47-digit "linha digitável" using official algorithms
+- **Multiple Extraction Methods**: Barcode scanning, text extraction, and raw PDF content analysis
+- **Barcode Detection**: Reads Interleaved 2 of 5 (I25) and other common barcode formats
 - **PDF Processing**: Handles both text-based and image-based PDFs
 - **Encrypted PDF Support**: Attempts to decrypt password-protected PDFs
 - **Formatted Output**: Option to display boleto numbers with proper spacing
+- **Clean Output**: No numbering or extra formatting in results
 
 ## Installation
 
@@ -66,23 +68,21 @@ A Python script to extract boleto numbers from Brazilian boleto PDF files. This 
 ### As a Library
 
 ```python
-from boleto_extractor import BoletoExtractor, extract_boleto_numbers
+from boleto_extractor import BoletoExtractor
 
-# Method 1: Using the class
+# Create extractor and extract boleto numbers
 extractor = BoletoExtractor()
 numbers = extractor.extract_boleto_numbers("boleto.pdf")
 
-# Method 2: Using convenience function
-numbers = extract_boleto_numbers("boleto.pdf")
+# Extract from encrypted PDF
+numbers = extractor.extract_boleto_numbers("encrypted.pdf", password="mypassword")
 
-# Extract from text
-from boleto_extractor import find_boleto_numbers_in_text
-text = "Boleto: 00193373700000001000500940144816060680935031"
-numbers = find_boleto_numbers_in_text(text)
+# Convert 44-digit barcode to 47-digit linha digitável
+barcode = "19797116900000386000000004572849356277103564"
+linha = extractor.barcode_to_linha_digitavel(barcode)
 
-# Validate boleto numbers
-from boleto_extractor import is_valid_boleto_number
-is_valid = is_valid_boleto_number("00193373700000001000500940144816060680935031")
+# Format output with spaces
+formatted = extractor.format_boleto_number("19790000050457284935662771035649711690000038600")
 ```
 
 ### Command Line Interface
@@ -104,6 +104,12 @@ boleto-extractor boleto.pdf --format
 
 # Both verbose and formatted
 boleto-extractor boleto.pdf --verbose --format
+
+# Extract from encrypted PDF
+boleto-extractor encrypted.pdf --password mypassword
+
+# Extract from encrypted PDF with all options
+boleto-extractor encrypted.pdf --password mypassword --verbose --format
 ```
 
 #### Examples
@@ -117,12 +123,12 @@ boleto-extractor boleto.pdf --format
 
 # Extract with detailed logging
 boleto-extractor boleto.pdf --verbose
-```
 
-### Legacy Script (Backward Compatibility)
+# Extract from encrypted PDF
+boleto-extractor encrypted.pdf --password mypassword
 
-```bash
-python boleto_extractor.py path/to/boleto.pdf
+# Extract from encrypted PDF with all options
+boleto-extractor encrypted.pdf --password mypassword --verbose --format
 ```
 
 ## Output Examples
@@ -131,7 +137,7 @@ python boleto_extractor.py path/to/boleto.pdf
 ```
 Found 1 boleto number(s):
 --------------------------------------------------
-1. 00193373700000001000500940144816060680935031
+19790000050457284935662771035649711690000038600
 --------------------------------------------------
 ```
 
@@ -139,24 +145,29 @@ Found 1 boleto number(s):
 ```
 Found 1 boleto number(s):
 --------------------------------------------------
-1. 0019 3373 7000 0000 1000 5009 4014 4816 0606 8093 5031
+1979 0000 0504 5728 4935 6627 7103 5649 7116 9000 0038 600
 --------------------------------------------------
 ```
 
 ## Supported Boleto Formats
 
-The script recognizes the following boleto number formats:
+The tool focuses on extracting 44-digit barcodes and converting them to 47-digit "linha digitável":
 
-### 47-Digit Format (Standard)
-- Example: `00193373700000001000500940144816060680935031`
-- Format: `XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX X`
+### 44-Digit Barcode (Input)
+- **Format**: `XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX`
+- **Example**: `19797116900000386000000004572849356277103564`
+- **Source**: What infrared pistols/scanners read from the barcode
 
-### 44-Digit Format (Alternative)
-- Example: `23793381286000042335909000463305975620000335000`
-- Format: `XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX`
+### 47-Digit Linha Digitável (Output)
+- **Format**: `XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXX`
+- **Example**: `19790000050457284935662771035649711690000038600`
+- **Usage**: Standard format for payments and manual entry
+
+### Conversion Process
+The tool automatically converts 44-digit barcodes to 47-digit "linha digitável" using the official Modulo 10 algorithm for check digit calculation.
 
 ### Supported Bank Codes
-The script recognizes boleto numbers starting with common Brazilian bank codes:
+The tool recognizes boleto numbers starting with common Brazilian bank codes:
 - 001 (Banco do Brasil)
 - 033 (Santander)
 - 104 (Caixa Econômica Federal)
@@ -168,15 +179,18 @@ The script recognizes boleto numbers starting with common Brazilian bank codes:
 - 633 (Banco Rendimento)
 - 745 (Citibank)
 - 756 (Sicoob)
+- 197 (Banco Bradesco BBI)
 
 ## How It Works
 
-The script uses multiple extraction methods to maximize success:
+The tool uses a barcode-focused approach to extract boleto numbers:
 
-1. **Text Extraction**: Extracts text from PDF using pdfplumber and PyPDF2
-2. **Pattern Matching**: Uses regex patterns to find boleto numbers in extracted text
-3. **Barcode Scanning**: Converts PDF pages to images and scans for barcodes
-4. **Validation**: Validates found numbers against known boleto formats
+1. **Barcode Scanning**: Converts PDF pages to images and scans for barcodes using pyzbar
+2. **Text Extraction**: As backup, extracts text from PDF and looks for 44-digit barcode patterns
+3. **Raw Content Analysis**: For encrypted PDFs, analyzes raw PDF content for barcode patterns
+4. **Validation**: Validates found numbers against known Brazilian bank codes
+5. **Conversion**: Converts 44-digit barcodes to 47-digit "linha digitável" using Modulo 10 algorithm
+6. **Output**: Returns clean 47-digit numbers ready for payment processing
 
 ## Troubleshooting
 
@@ -186,17 +200,18 @@ The script uses multiple extraction methods to maximize success:
 
 **Possible causes:**
 - PDF is encrypted/password protected
-- PDF contains only images (no text)
-- Boleto number is not in a recognized format
-- PDF quality is too low for text extraction
+- PDF contains only images with low-quality barcodes
+- Barcode is not in a recognized format
+- PDF quality is too low for barcode scanning
 
 **Solutions:**
 1. Try installing PyMuPDF for better image processing:
    ```bash
    pip install PyMuPDF
    ```
-2. Check if the PDF is password protected
-3. Ensure the PDF contains readable text or clear barcode images
+2. Check if the PDF is password protected and provide the password
+3. Ensure the PDF has clear, high-resolution barcode images
+4. Try the `--verbose` flag for more detailed error information
 
 #### "Error extracting text from PDF"
 
@@ -207,7 +222,7 @@ The script uses multiple extraction methods to maximize success:
 
 **Solutions:**
 1. Try opening the PDF in a PDF reader to verify it's not corrupted
-2. If password protected, try to remove the password first
+2. If password protected, provide the correct password
 3. Convert the PDF to a different format if possible
 
 #### "Error scanning barcodes"
@@ -224,19 +239,36 @@ The script uses multiple extraction methods to maximize success:
 
 ### Performance Tips
 
-- For large PDFs, the script may take longer to process
+- For large PDFs, the tool may take longer to process
 - Use `--verbose` flag to see progress and identify bottlenecks
 - Consider splitting large PDFs into smaller files if possible
 
-## Testing
+## Usage Examples
 
-Run the test script to verify the installation:
-
+Basic usage:
 ```bash
-python test_boleto.py
+boleto-extractor boleto.pdf
 ```
 
-This will test the extractor with sample boleto numbers and validation functions.
+With formatting:
+```bash
+boleto-extractor boleto.pdf --format
+```
+
+With password for encrypted PDFs:
+```bash
+boleto-extractor encrypted.pdf --password mypassword
+```
+
+With verbose output:
+```bash
+boleto-extractor boleto.pdf --verbose
+```
+
+Combined options:
+```bash
+boleto-extractor encrypted.pdf --password mypassword --verbose --format
+```
 
 ## Dependencies
 

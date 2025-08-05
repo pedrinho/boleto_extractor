@@ -14,12 +14,13 @@ __email__ = ""
 __all__ = ["BoletoExtractor"]
 
 # Convenience function for quick extraction
-def extract_boleto_numbers(pdf_path, verbose=False, format_output=False):
+def extract_boleto_numbers(pdf_path, password=None, verbose=False, format_output=False):
     """
     Convenience function to extract boleto numbers from a PDF file.
     
     Args:
         pdf_path (str): Path to the PDF file
+        password (str, optional): Password for encrypted PDF files
         verbose (bool): Enable verbose logging
         format_output (bool): Format the output with spaces
         
@@ -27,7 +28,7 @@ def extract_boleto_numbers(pdf_path, verbose=False, format_output=False):
         list: List of extracted boleto numbers
     """
     extractor = BoletoExtractor()
-    return extractor.extract_boleto_numbers(pdf_path)
+    return extractor.extract_boleto_numbers(pdf_path, password)
 
 def find_boleto_numbers_in_text(text):
     """

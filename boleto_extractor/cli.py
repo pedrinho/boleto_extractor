@@ -27,12 +27,20 @@ Examples:
   boleto-extractor boleto.pdf
   boleto-extractor /path/to/boleto.pdf --verbose
   boleto-extractor boleto.pdf --format
+  boleto-extractor encrypted.pdf --password mypassword
+  boleto-extractor encrypted.pdf --password mypassword --verbose --format
         """
     )
     
     parser.add_argument(
         'pdf_file',
         help='Path to the PDF file containing the boleto'
+    )
+    
+    parser.add_argument(
+        '--password', '-p',
+        type=str,
+        help='Password for encrypted PDF files'
     )
     
     parser.add_argument(
@@ -67,29 +75,20 @@ Examples:
     extractor = BoletoExtractor()
     
     try:
-        boleto_numbers = extractor.extract_boleto_numbers(str(pdf_path))
+        boleto_numbers = extractor.extract_boleto_numbers(str(pdf_path), args.password)
         
         if not boleto_numbers:
-            logger.warning("No boleto numbers found in the PDF")
             print("No boleto numbers found.")
-            print("\nPossible reasons:")
-            print("- PDF is encrypted/password protected")
-            print("- PDF contains only images (no text)")
-            print("- Boleto number is not in a recognized format")
-            print("- PDF quality is too low for text extraction")
-            print("\nTry installing PyMuPDF for better image processing:")
-            print("pip install PyMuPDF")
         else:
-            logger.info(f"Found {len(boleto_numbers)} boleto number(s)")
-            print(f"\nFound {len(boleto_numbers)} boleto number(s):")
+            print(f"Found {len(boleto_numbers)} boleto number(s):")
             print("-" * 50)
             
-            for i, number in enumerate(boleto_numbers, 1):
+            for number in boleto_numbers:
                 if args.format:
                     formatted_number = extractor.format_boleto_number(number)
-                    print(f"{i}. {formatted_number}")
+                    print(formatted_number)
                 else:
-                    print(f"{i}. {number}")
+                    print(number)
             
             print("-" * 50)
             
