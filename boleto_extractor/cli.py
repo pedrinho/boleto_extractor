@@ -10,6 +10,13 @@ import argparse
 from pathlib import Path
 import logging
 
+# Try to import pyperclip for clipboard functionality
+try:
+    import pyperclip
+    CLIPBOARD_AVAILABLE = True
+except ImportError:
+    CLIPBOARD_AVAILABLE = False
+
 from .extractor import BoletoExtractor
 
 # Configure logging
@@ -27,8 +34,9 @@ Examples:
   boleto-extractor boleto.pdf
   boleto-extractor /path/to/boleto.pdf --verbose
   boleto-extractor boleto.pdf --format
+  boleto-extractor boleto.pdf --clipboard
   boleto-extractor encrypted.pdf --password mypassword
-  boleto-extractor encrypted.pdf --password mypassword --verbose --format
+  boleto-extractor encrypted.pdf --password mypassword --verbose --format --clipboard
         """
     )
     
@@ -53,6 +61,12 @@ Examples:
         '--format', '-f',
         action='store_true',
         help='Format the output with spaces for readability'
+    )
+    
+    parser.add_argument(
+        '--clipboard', '-c',
+        action='store_true',
+        help='Copy the first boleto number to clipboard'
     )
     
     args = parser.parse_args()
@@ -91,6 +105,24 @@ Examples:
                     print(number)
             
             print("-" * 50)
+            
+            # Copy to clipboard if requested
+            if args.clipboard:
+                if not CLIPBOARD_AVAILABLE:
+                    logger.warning("pyperclip not installed. Install with: pip install pyperclip")
+                else:
+                    try:
+                        # Copy the first boleto number to clipboard
+                        first_number = boleto_numbers[0]
+                        if args.format:
+                            clipboard_text = extractor.format_boleto_number(first_number)
+                        else:
+                            clipboard_text = first_number
+                        
+                        pyperclip.copy(clipboard_text)
+                        print(f"✓ Copied to clipboard: {clipboard_text}")
+                    except Exception as e:
+                        logger.error(f"Failed to copy to clipboard: {e}")
             
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")
