@@ -1,6 +1,6 @@
 # Brazilian Boleto Number Extractor
 
-A Python tool to extract boleto numbers from Brazilian boleto PDF files. This tool reads 44-digit barcodes from PDFs and converts them to the standard 47-digit "linha digitável" format used for payments.
+A Python tool to extract boleto numbers from Brazilian boleto PDF files. This tool reads 44-digit barcodes from PDFs and converts them to the standard 47-digit "linha digitável" format used for payments. The tool always returns 47-digit numbers ready for payment processing.
 
 ## Features
 
@@ -10,7 +10,7 @@ A Python tool to extract boleto numbers from Brazilian boleto PDF files. This to
 - **Barcode Detection**: Reads Interleaved 2 of 5 (I25) and other common barcode formats
 - **PDF Processing**: Handles both text-based and image-based PDFs
 - **Encrypted PDF Support**: Attempts to decrypt password-protected PDFs
-- **Formatted Output**: Option to display boleto numbers with proper spacing
+- **Brazilian Format Output**: Option to display boleto numbers in proper Brazilian "linha digitável" format
 - **Clean Output**: No numbering or extra formatting in results
 
 ## Installation
@@ -83,6 +83,7 @@ linha = extractor.barcode_to_linha_digitavel(barcode)
 
 # Format output with spaces
 formatted = extractor.format_boleto_number("19790000050457284935662771035649711690000038600")
+# Result: "19790.00005 04572.84935 66277.10356 4 9711690000038600"
 ```
 
 ### Command Line Interface
@@ -99,7 +100,7 @@ boleto-extractor path/to/boleto.pdf
 # With verbose logging
 boleto-extractor boleto.pdf --verbose
 
-# With formatted output
+# With Brazilian format output
 boleto-extractor boleto.pdf --format
 
 # Both verbose and formatted
@@ -118,7 +119,7 @@ boleto-extractor encrypted.pdf --password mypassword --verbose --format
 # Extract from a local PDF file
 boleto-extractor /Users/pedro/Downloads/boleto.pdf
 
-# Extract with formatted output
+# Extract with Brazilian format output
 boleto-extractor boleto.pdf --format
 
 # Extract with detailed logging
@@ -145,7 +146,7 @@ Found 1 boleto number(s):
 ```
 Found 1 boleto number(s):
 --------------------------------------------------
-1979 0000 0504 5728 4935 6627 7103 5649 7116 9000 0038 600
+19790.00005 04572.84935 66277.10356 4 9711690000038600
 --------------------------------------------------
 ```
 
@@ -159,7 +160,7 @@ The tool focuses on extracting 44-digit barcodes and converting them to 47-digit
 - **Source**: What infrared pistols/scanners read from the barcode
 
 ### 47-Digit Linha Digitável (Output)
-- **Format**: `XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXX`
+- **Format**: `XXXXX.XXXXX XXXXX.XXXXXX XXXXX.XXXXXX X XXXXXXXXXXXXXX`
 - **Example**: `19790000050457284935662771035649711690000038600`
 - **Usage**: Standard format for payments and manual entry
 
@@ -250,7 +251,7 @@ Basic usage:
 boleto-extractor boleto.pdf
 ```
 
-With formatting:
+With Brazilian format:
 ```bash
 boleto-extractor boleto.pdf --format
 ```
