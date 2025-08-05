@@ -250,12 +250,13 @@ class BoletoExtractor:
     def is_valid_boleto_number(self, number: str) -> bool:
         """
         Validate if a number is a valid Brazilian boleto barcode (44 digits).
+        Returns True for any 44-digit number, with warnings for unknown bank codes.
         
         Args:
             number (str): Number to validate
             
         Returns:
-            bool: True if valid, False otherwise
+            bool: True if valid 44-digit number, False otherwise
         """
         if not number or not number.isdigit():
             return False
@@ -273,8 +274,10 @@ class BoletoExtractor:
         
         if len(number) >= 3 and number[:3] in known_bank_codes:
             return True
-        
-        return False
+        else:
+            # Unknown bank code, but still return True with a warning
+            logger.warning(f"Unknown bank code '{number[:3]}' in boleto number: {number}")
+            return True
 
     def scan_barcodes_in_image(self, image: np.ndarray) -> List[str]:
         """Scan for barcodes in an image."""
