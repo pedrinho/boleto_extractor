@@ -88,54 +88,8 @@ formatted = extractor.format_boleto_number("197900000504572849356627710356497116
 
 ### Command Line Interface
 
-#### Basic Usage
-
 ```bash
 boleto-extractor path/to/boleto.pdf
-```
-
-#### Advanced Usage
-
-```bash
-# With verbose logging
-boleto-extractor boleto.pdf --verbose
-
-# With Brazilian format output
-boleto-extractor boleto.pdf --format
-
-# Copy to clipboard
-boleto-extractor boleto.pdf --clipboard
-
-# Both verbose and formatted
-boleto-extractor boleto.pdf --verbose --format
-
-# Extract from encrypted PDF
-boleto-extractor encrypted.pdf --password mypassword
-
-# Extract from encrypted PDF with all options
-boleto-extractor encrypted.pdf --password mypassword --verbose --format --clipboard
-```
-
-#### Examples
-
-```bash
-# Extract from a local PDF file
-boleto-extractor /Users/pedro/Downloads/boleto.pdf
-
-# Extract with Brazilian format output
-boleto-extractor boleto.pdf --format
-
-# Copy boleto number to clipboard
-boleto-extractor boleto.pdf --clipboard
-
-# Extract with detailed logging
-boleto-extractor boleto.pdf --verbose
-
-# Extract from encrypted PDF
-boleto-extractor encrypted.pdf --password mypassword
-
-# Extract from encrypted PDF with all options
-boleto-extractor encrypted.pdf --password mypassword --verbose --format --clipboard
 ```
 
 ## Output Examples
