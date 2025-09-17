@@ -608,3 +608,57 @@ body {
         transform: translateX(0);
     }
 }
+
+/* GitHub Fork Ribbon */
+.github-fork-ribbon {
+    position: fixed;
+    top: 55px;
+    right: -70px;
+    z-index: 10000;
+    display: inline-block;
+    background: #000;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 900;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+    padding: 10px 50px;
+    line-height: 1;
+    transform: rotate(45deg);
+    transform-origin: center center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.github-fork-ribbon:hover {
+    background: #24292e;
+}
+
+/* Privacy Disclaimer */
+.privacy-disclaimer {
+    margin-top: 15px;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.privacy-disclaimer i {
+    margin-right: 10px;
+    color: #4ade80;
+    font-size: 1.1rem;
+}
+
+/* Responsive adjustments for GitHub ribbon */
+@media (max-width: 768px) {
+    .github-fork-ribbon {
+        font-size: 16px;
+        padding: 8px 40px;
+        top: 40px;
+        right: -40px;
+        transform: rotate(45deg);
+    }
+}
