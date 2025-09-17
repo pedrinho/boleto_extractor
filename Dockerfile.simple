@@ -1,9 +1,11 @@
 # Simple Dockerfile without OpenCV system dependencies
 FROM python:3.11-slim
 
-# Install only essential packages (no OpenCV system deps needed for headless version)
+# Install essential packages for pyzbar and other dependencies
 RUN apt-get update && apt-get install -y \
     wget \
+    libzbar0 \
+    libzbar-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory

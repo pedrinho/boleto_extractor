@@ -27,7 +27,14 @@ except ImportError:
 
 import numpy as np
 from PIL import Image
-from pyzbar import pyzbar
+
+# Barcode reading
+try:
+    from pyzbar import pyzbar
+    PYZBAR_AVAILABLE = True
+except ImportError:
+    PYZBAR_AVAILABLE = False
+    pyzbar = None
 
 # PDF to image conversion
 try:
@@ -289,6 +296,10 @@ class BoletoExtractor:
         """Scan for barcodes in an image."""
         barcode_data = []
         
+        if not PYZBAR_AVAILABLE:
+            logger.warning("pyzbar not available, skipping barcode scanning")
+            return barcode_data
+        
         try:
             # Convert to PIL Image
             if len(image.shape) == 3:
@@ -321,6 +332,10 @@ class BoletoExtractor:
             List[str]: List of found barcode numbers
         """
         barcode_numbers = []
+        
+        if not PYZBAR_AVAILABLE:
+            logger.warning("pyzbar not available, skipping PDF barcode scanning")
+            return barcode_numbers
         
         if PYMUPDF_AVAILABLE:
             page_images = self.convert_pdf_to_images(pdf_path, password)
