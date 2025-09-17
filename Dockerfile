@@ -1,18 +1,16 @@
 # Use Python 3.11 slim image
 FROM python:3.11-slim
 
-# Install system dependencies required for headless OpenCV and other packages
+# Install minimal system dependencies for headless OpenCV
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender-dev \
+    libxrender1 \
     libgomp1 \
-    libjpeg-dev \
-    libpng-dev \
-    libtiff-dev \
-    libatlas-base-dev \
-    gfortran \
+    libjpeg62-turbo \
+    libpng16-16 \
+    libtiff5 \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
