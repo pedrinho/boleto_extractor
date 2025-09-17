@@ -18,7 +18,13 @@ import pdfplumber
 import PyPDF2
 
 # Image processing and barcode reading
-import cv2
+try:
+    import cv2
+    OPENCV_AVAILABLE = True
+except ImportError:
+    OPENCV_AVAILABLE = False
+    cv2 = None
+
 import numpy as np
 from PIL import Image
 from pyzbar import pyzbar
@@ -150,7 +156,7 @@ class BoletoExtractor:
                         img_array = np.array(img)
                         
                         # Convert to grayscale if it's RGB
-                        if len(img_array.shape) == 3:
+                        if len(img_array.shape) == 3 and OPENCV_AVAILABLE:
                             img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
                         
                         images.append(img_array)
