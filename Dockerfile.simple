@@ -29,6 +29,6 @@ ENV FLASK_ENV=production
 ENV PORT=3000
 
 # Run the application
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:3000", "app:app"]
+CMD ["sh", "-c", "gunicorn -w 2 -b 0.0.0.0:${PORT:-3000} app:app"]
 
 
