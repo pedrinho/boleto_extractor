@@ -10,6 +10,7 @@ pyperclip>=1.8.0
 # Web framework dependencies
 Flask>=2.3.0
 Werkzeug>=2.3.0
+gunicorn>=21.0.0
 
 # Test dependencies
 pytest>=7.0.0
