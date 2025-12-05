@@ -1,8 +1,15 @@
-# Simple Dockerfile without OpenCV system dependencies
-FROM python:3.11-slim
+# Simple Dockerfile for Render, with stable Debian and only essential system dependencies
+FROM python:3.11-slim-bullseye
 
-# Install essential packages for pyzbar and other dependencies
+# Install system dependencies needed for OpenCV headless, pyzbar, and Pillow
 RUN apt-get update && apt-get install -y \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libgomp1 \
+    libjpeg62-turbo \
+    libpng16-16 \
     wget \
     libzbar0 \
     libzbar-dev \
