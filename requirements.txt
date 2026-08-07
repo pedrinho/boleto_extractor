@@ -22,8 +22,7 @@ numpy==2.2.6
 # CLI clipboard support
 pyperclip==1.9.0
 
-# Web framework. Vercel serves the WSGI `app` object directly and ignores
-# gunicorn; the container image (Render) uses it as its WSGI server.
+# Web framework. Vercel serves the WSGI `app` object directly, so no WSGI
+# server (gunicorn/uwsgi) is needed or bundled.
 Flask==3.1.2
 Werkzeug==3.1.3
-gunicorn==26.0.0

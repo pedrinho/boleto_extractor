@@ -1,9 +1,6 @@
 # Brazilian Boleto Number Extractor
 
-🌐 **Try it online**: [https://boleto-extractor-xrva.onrender.com/](https://boleto-extractor-xrva.onrender.com/)
-
-<!-- Vercel (https://boleto-extractor.vercel.app/) is configured via vercel.json but
-     not deployed yet. Switch the link above once it is live. -->
+🌐 **Try it online**: [https://boleto-extractor.vercel.app/](https://boleto-extractor.vercel.app/)
 
 A Python tool to extract boleto numbers from Brazilian boleto PDF files. This tool reads 44-digit barcodes from PDFs and converts them to the standard 47-digit "linha digitável" format used for payments. The tool always returns 47-digit numbers ready for payment processing.
 

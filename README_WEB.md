@@ -30,15 +30,12 @@ A web interface for the Brazilian Boleto Number Extractor, allowing users to upl
 
 ### Production Deployment
 
-Two deployment targets are supported from a single dependency set:
-
-- **Render** (currently live): builds `Dockerfile.simple` and serves via gunicorn.
-- **Vercel**: configured by `vercel.json` and `.python-version`. Vercel
-  auto-detects the WSGI `app` object in `app.py`, so it needs no extra entrypoint
-  or WSGI server.
+Deployment is on **Vercel**, configured by `vercel.json` and `.python-version`.
+Vercel auto-detects the WSGI `app` object in `app.py`, so no extra entrypoint or
+WSGI server is needed, and deploys are triggered by pushing to `main`.
 
 Because every dependency is a self-contained wheel with no native system library,
-the same `requirements.txt` works on both, and on any other host that runs Python.
+the same `requirements.txt` also runs unmodified on any other host with Python.
 
 #### Environment Variables
 
@@ -126,7 +123,6 @@ boleto/
 ├── requirements.txt      # Runtime dependencies (pinned)
 ├── requirements-dev.txt  # Test dependencies
 ├── vercel.json          # Vercel function config
-├── Dockerfile.simple    # Render container image
 ├── .python-version      # Python version specification
 ├── start                # One-stop local launcher
 └── README_WEB.md        # This file
