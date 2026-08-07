@@ -19,12 +19,31 @@ from boleto_extractor.extractor import BoletoExtractor
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+IS_PRODUCTION = os.environ.get('FLASK_ENV') == 'production'
+
+# The session cookie holding extraction results is signed with SECRET_KEY. A
+# hardcoded fallback in a public repo is a forgeable session, so refuse to start
+# in production without a real one rather than appearing to work.
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if IS_PRODUCTION:
+        raise RuntimeError(
+            "SECRET_KEY must be set when FLASK_ENV=production. "
+            "Generate one with: python -c 'import secrets; print(secrets.token_hex(32))'"
+        )
+    SECRET_KEY = 'dev-secret-key-change-in-production'
+
+# Upload ceiling. Keep this at or below the host's request body limit: Vercel
+# rejects bodies over 4.5MB itself, before Flask is reached, so anything larger
+# surfaces as an opaque platform 413 instead of the friendly handler below.
+MAX_UPLOAD_MB = float(os.environ.get('MAX_UPLOAD_MB', '4'))
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['MAX_CONTENT_LENGTH'] = int(MAX_UPLOAD_MB * 1024 * 1024)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
+app.config['SESSION_COOKIE_SECURE'] = IS_PRODUCTION
 def is_api_enabled() -> bool:
     """Return True if public API is enabled via env var."""
     return os.environ.get('ENABLE_PUBLIC_API', 'false').lower() == 'true'
@@ -41,7 +60,7 @@ def require_api_key_if_set():
 def add_security_headers(response):
     """Add basic security headers to all responses."""
     # Only send HSTS in production over HTTPS
-    if os.environ.get('FLASK_ENV') == 'production':
+    if IS_PRODUCTION:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
     # Lock down content sources to our own origin and approved CDNs used in templates
     response.headers['Content-Security-Policy'] = (
@@ -68,7 +87,7 @@ def allowed_file(filename):
 @app.route('/')
 def index():
     """Render the main page with the upload form."""
-    return render_template('index.html')
+    return render_template('index.html', max_upload_mb=f'{MAX_UPLOAD_MB:g}')
 
 @app.route('/api/extract', methods=['POST'])
 def extract_boleto_api():
@@ -173,7 +192,9 @@ def extract_boleto_web():
         # Check if file was uploaded
         if 'file' not in request.files:
             flash('No file selected', 'error')
-            return redirect(request.url)
+            # request.url is /extract, which is POST-only - redirecting there
+            # would serve a 405 instead of the flashed message.
+            return redirect(url_for('index'))
         
         file = request.files['file']
         password = request.form.get('password', '')
@@ -182,12 +203,16 @@ def extract_boleto_web():
         # Check if file was actually selected
         if file.filename == '':
             flash('No file selected', 'error')
-            return redirect(request.url)
+            # request.url is /extract, which is POST-only - redirecting there
+            # would serve a 405 instead of the flashed message.
+            return redirect(url_for('index'))
         
         # Validate file type
         if not allowed_file(file.filename):
             flash('Please upload a PDF file', 'error')
-            return redirect(request.url)
+            # request.url is /extract, which is POST-only - redirecting there
+            # would serve a 405 instead of the flashed message.
+            return redirect(url_for('index'))
         
         # Save uploaded file to temporary location
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
@@ -227,7 +252,7 @@ def extract_boleto_web():
         return redirect(url_for('index'))
         
     except RequestEntityTooLarge:
-        flash('File too large. Maximum size is 16MB.', 'error')
+        flash(f'File too large. Maximum size is {MAX_UPLOAD_MB:g}MB.', 'error')
         return redirect(url_for('index'))
     except Exception as e:
         logger.error(f"Error in extract_boleto_web: {e}")
@@ -242,7 +267,7 @@ def health_check():
 @app.errorhandler(413)
 def too_large(e):
     """Handle file too large error."""
-    flash('File too large. Maximum size is 16MB.', 'error')
+    flash(f'File too large. Maximum size is {MAX_UPLOAD_MB:g}MB.', 'error')
     return redirect(url_for('index'))
 
 @app.errorhandler(404)

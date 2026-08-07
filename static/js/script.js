@@ -49,10 +49,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Validate file size (16MB max)
+        // Validate file size. The ceiling comes from the server so the two cannot
+        // drift apart; falls back to a conservative 4MB if the attribute is absent.
+        const maxMb = parseFloat(uploadForm.dataset.maxUploadMb) || 4;
         const file = fileInput.files[0];
-        if (file.size > 16 * 1024 * 1024) {
-            showToast('File too large. Maximum size is 16MB.', 'error');
+        if (file.size > maxMb * 1024 * 1024) {
+            showToast(`File too large. Maximum size is ${maxMb}MB.`, 'error');
             return;
         }
 

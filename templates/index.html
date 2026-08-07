@@ -35,13 +35,13 @@
 
             <!-- Upload Form -->
             <div class="upload-section">
-                <form id="uploadForm" action="{{ url_for('extract_boleto_web') }}" method="post" enctype="multipart/form-data">
+                <form id="uploadForm" action="{{ url_for('extract_boleto_web') }}" method="post" enctype="multipart/form-data" data-max-upload-mb="{{ max_upload_mb }}">
                     <div class="form-group">
                         <label for="file" class="file-label">
                             <div class="file-input-wrapper">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <span class="file-text">Choose PDF file or drag & drop</span>
-                                <span class="file-hint">Maximum 16MB</span>
+                                <span class="file-hint">Maximum {{ max_upload_mb }}MB</span>
                             </div>
                             <input type="file" id="file" name="file" accept=".pdf" required>
                         </label>
