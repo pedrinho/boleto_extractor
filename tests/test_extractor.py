@@ -166,9 +166,9 @@ class TestBoletoExtractor(unittest.TestCase):
         ]
         self.assertEqual(sorted(result), sorted(expected))
 
-    @patch('boleto_extractor.extractor.pyzbar')
+    @patch('boleto_extractor.extractor.zxingcpp')
     @patch('boleto_extractor.extractor.Image')
-    def test_scan_barcodes_in_image_valid(self, mock_image, mock_pyzbar):
+    def test_scan_barcodes_in_image_valid(self, mock_image, mock_zxing):
         """Test scanning barcodes in image with valid barcode."""
         # Mock image array
         mock_img_array = np.zeros((100, 100), dtype=np.uint8)
@@ -179,27 +179,27 @@ class TestBoletoExtractor(unittest.TestCase):
         
         # Mock barcode result
         mock_barcode = Mock()
-        mock_barcode.data = b"19797116900000386000000004572849356277103564"
-        mock_pyzbar.decode.return_value = [mock_barcode]
+        mock_barcode.text = "19797116900000386000000004572849356277103564"
+        mock_zxing.read_barcodes.return_value = [mock_barcode]
         
         result = self.extractor.scan_barcodes_in_image(mock_img_array)
         self.assertEqual(result, ["19797116900000386000000004572849356277103564"])
 
-    @patch('boleto_extractor.extractor.pyzbar')
+    @patch('boleto_extractor.extractor.zxingcpp')
     @patch('boleto_extractor.extractor.Image')
-    def test_scan_barcodes_in_image_no_barcodes(self, mock_image, mock_pyzbar):
+    def test_scan_barcodes_in_image_no_barcodes(self, mock_image, mock_zxing):
         """Test scanning barcodes in image with no barcodes."""
         mock_img_array = np.zeros((100, 100), dtype=np.uint8)
         mock_pil_image = Mock()
         mock_image.fromarray.return_value = mock_pil_image
-        mock_pyzbar.decode.return_value = []
+        mock_zxing.read_barcodes.return_value = []
         
         result = self.extractor.scan_barcodes_in_image(mock_img_array)
         self.assertEqual(result, [])
 
-    @patch('boleto_extractor.extractor.pyzbar')
+    @patch('boleto_extractor.extractor.zxingcpp')
     @patch('boleto_extractor.extractor.Image')
-    def test_scan_barcodes_in_image_invalid_barcode(self, mock_image, mock_pyzbar):
+    def test_scan_barcodes_in_image_invalid_barcode(self, mock_image, mock_zxing):
         """Test scanning barcodes in image with invalid barcode."""
         mock_img_array = np.zeros((100, 100), dtype=np.uint8)
         mock_pil_image = Mock()
@@ -207,29 +207,29 @@ class TestBoletoExtractor(unittest.TestCase):
         
         # Mock invalid barcode
         mock_barcode = Mock()
-        mock_barcode.data = b"invalid_barcode"
-        mock_pyzbar.decode.return_value = [mock_barcode]
+        mock_barcode.text = "invalid_barcode"
+        mock_zxing.read_barcodes.return_value = [mock_barcode]
         
         result = self.extractor.scan_barcodes_in_image(mock_img_array)
         self.assertEqual(result, [])
 
-    @patch('boleto_extractor.extractor.pyzbar')
+    @patch('boleto_extractor.extractor.zxingcpp')
     @patch('boleto_extractor.extractor.Image')
-    def test_scan_barcodes_in_image_rgb(self, mock_image, mock_pyzbar):
+    def test_scan_barcodes_in_image_rgb(self, mock_image, mock_zxing):
         """Test scanning barcodes in RGB image."""
         # Mock RGB image array
         mock_img_array = np.zeros((100, 100, 3), dtype=np.uint8)
         
         mock_pil_image = Mock()
         mock_image.fromarray.return_value = mock_pil_image
-        mock_pyzbar.decode.return_value = []
+        mock_zxing.read_barcodes.return_value = []
         
         result = self.extractor.scan_barcodes_in_image(mock_img_array)
         self.assertEqual(result, [])
 
-    @patch('boleto_extractor.extractor.pyzbar')
+    @patch('boleto_extractor.extractor.zxingcpp')
     @patch('boleto_extractor.extractor.Image')
-    def test_scan_barcodes_in_image_exception(self, mock_image, mock_pyzbar):
+    def test_scan_barcodes_in_image_exception(self, mock_image, mock_zxing):
         """Test scanning barcodes in image with exception."""
         mock_img_array = np.zeros((100, 100), dtype=np.uint8)
         mock_image.fromarray.side_effect = Exception("Test exception")
@@ -245,10 +245,10 @@ class TestBoletoExtractor(unittest.TestCase):
 
     @patch('boleto_extractor.extractor.PYMUPDF_AVAILABLE', True)
     @patch('boleto_extractor.extractor.fitz')
-    @patch('boleto_extractor.extractor.pyzbar')
+    @patch('boleto_extractor.extractor.zxingcpp')
     @patch('boleto_extractor.extractor.Image')
     @patch('builtins.open', new_callable=mock_open)
-    def test_scan_barcodes_in_pdf_with_pymupdf(self, mock_file, mock_image, mock_pyzbar, mock_fitz):
+    def test_scan_barcodes_in_pdf_with_pymupdf(self, mock_file, mock_image, mock_zxing, mock_fitz):
         """Test scanning barcodes in PDF with PyMuPDF."""
         # Mock fitz document
         mock_doc = Mock()
@@ -272,8 +272,8 @@ class TestBoletoExtractor(unittest.TestCase):
             
             # Mock barcode result
             mock_barcode = Mock()
-            mock_barcode.data = b"19797116900000386000000004572849356277103564"
-            mock_pyzbar.decode.return_value = [mock_barcode]
+            mock_barcode.text = "19797116900000386000000004572849356277103564"
+            mock_zxing.read_barcodes.return_value = [mock_barcode]
             
             result = self.extractor.scan_barcodes_in_pdf("test.pdf")
             self.assertEqual(result, ["19797116900000386000000004572849356277103564"])
@@ -472,10 +472,10 @@ class TestBoletoExtractor(unittest.TestCase):
 
     @patch('boleto_extractor.extractor.PYMUPDF_AVAILABLE', True)
     @patch('boleto_extractor.extractor.fitz')
-    @patch('boleto_extractor.extractor.pyzbar')
+    @patch('boleto_extractor.extractor.zxingcpp')
     @patch('boleto_extractor.extractor.Image')
     @patch('builtins.open', new_callable=mock_open)
-    def test_extract_boleto_numbers_barcode_success(self, mock_file, mock_image, mock_pyzbar, mock_fitz):
+    def test_extract_boleto_numbers_barcode_success(self, mock_file, mock_image, mock_zxing, mock_fitz):
         """Test main extraction method with barcode success."""
         # Mock fitz document
         mock_doc = Mock()
@@ -499,8 +499,8 @@ class TestBoletoExtractor(unittest.TestCase):
             
             # Mock barcode result
             mock_barcode = Mock()
-            mock_barcode.data = b"19797116900000386000000004572849356277103564"
-            mock_pyzbar.decode.return_value = [mock_barcode]
+            mock_barcode.text = "19797116900000386000000004572849356277103564"
+            mock_zxing.read_barcodes.return_value = [mock_barcode]
             
             result = self.extractor.extract_boleto_numbers("test.pdf")
             self.assertEqual(len(result), 1)

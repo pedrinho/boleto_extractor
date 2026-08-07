@@ -1,0 +1,9 @@
+# Development and test dependencies.
+#
+# Kept separate from requirements.txt so they are never bundled into a deployment.
+# Vercel reads requirements.txt only; ./start installs both for local work.
+
+-r requirements.txt
+
+pytest==8.4.1
+pytest-cov==6.2.1

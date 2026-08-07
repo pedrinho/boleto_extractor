@@ -17,24 +17,19 @@ import io
 import pdfplumber
 import PyPDF2
 
-# Image processing and barcode reading
-try:
-    import cv2
-    OPENCV_AVAILABLE = True
-except ImportError:
-    OPENCV_AVAILABLE = False
-    cv2 = None
-
+# Image processing
 import numpy as np
 from PIL import Image
 
-# Barcode reading
+# Barcode reading. zxing-cpp ships as a self-contained wheel, so unlike pyzbar it
+# needs no native system library - which is what lets this run on hosts where we
+# cannot apt-get install anything.
 try:
-    from pyzbar import pyzbar
-    PYZBAR_AVAILABLE = True
+    import zxingcpp
+    ZXING_AVAILABLE = True
 except ImportError:
-    PYZBAR_AVAILABLE = False
-    pyzbar = None
+    ZXING_AVAILABLE = False
+    zxingcpp = None
 
 # PDF to image conversion
 try:
@@ -154,18 +149,16 @@ class BoletoExtractor:
                 for page_num in range(len(doc)):
                     try:
                         page = doc.load_page(page_num)
-                        # Higher resolution for better barcode detection
-                        pix = page.get_pixmap(matrix=fitz.Matrix(3, 3))
+                        # Higher resolution for better barcode detection. Rendering
+                        # straight to grayscale is both what the decoder wants and
+                        # a third of the pixel data of RGB.
+                        pix = page.get_pixmap(matrix=fitz.Matrix(3, 3), colorspace=fitz.csGRAY)
                         img_data = pix.tobytes("png")
-                        
+
                         # Convert to numpy array
                         img = Image.open(io.BytesIO(img_data))
                         img_array = np.array(img)
-                        
-                        # Convert to grayscale if it's RGB
-                        if len(img_array.shape) == 3 and OPENCV_AVAILABLE:
-                            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-                        
+
                         images.append(img_array)
                         
                     except Exception:
@@ -296,25 +289,26 @@ class BoletoExtractor:
         """Scan for barcodes in an image."""
         barcode_data = []
         
-        if not PYZBAR_AVAILABLE:
-            logger.warning("pyzbar not available, skipping barcode scanning")
+        if not ZXING_AVAILABLE:
+            logger.warning("zxing-cpp not available, skipping barcode scanning")
             return barcode_data
-        
+
         try:
             # Convert to PIL Image
             if len(image.shape) == 3:
                 pil_image = Image.fromarray(image)
             else:
                 pil_image = Image.fromarray(image, mode='L')
-            
-            # Scan for barcodes
-            barcodes = pyzbar.decode(pil_image)
-            
+
+            # Scan for barcodes. Boleto barcodes are always Interleaved 2 of 5;
+            # restricting the format avoids false positives from other symbologies.
+            barcodes = zxingcpp.read_barcodes(pil_image, formats=zxingcpp.BarcodeFormat.ITF)
+
             for barcode in barcodes:
-                data = barcode.data.decode('utf-8')
+                data = barcode.text
                 if data and self.is_valid_boleto_number(data):
                     barcode_data.append(data)
-                    
+
         except Exception as e:
             logger.error(f"Error scanning barcodes: {e}")
             
@@ -333,21 +327,21 @@ class BoletoExtractor:
         """
         barcode_numbers = []
         
-        if not PYZBAR_AVAILABLE:
-            logger.warning("pyzbar not available, skipping PDF barcode scanning")
+        if not ZXING_AVAILABLE:
+            logger.warning("zxing-cpp not available, skipping PDF barcode scanning")
             return barcode_numbers
-        
+
         if PYMUPDF_AVAILABLE:
             page_images = self.convert_pdf_to_images(pdf_path, password)
-            
+
             for i, img in enumerate(page_images):
                 try:
                     # Find barcodes in the image
-                    barcodes = pyzbar.decode(img)
-                    
+                    barcodes = zxingcpp.read_barcodes(img, formats=zxingcpp.BarcodeFormat.ITF)
+
                     for barcode in barcodes:
-                        barcode_data = barcode.data.decode('utf-8')
-                        
+                        barcode_data = barcode.text
+
                         # Check if it looks like a boleto number
                         if self.is_valid_boleto_number(barcode_data):
                             barcode_numbers.append(barcode_data)
