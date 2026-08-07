@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#
+# One-stop launcher for the Boleto Extractor.
+#
+#   ./start              start the web app (http://localhost:3000)
+#   ./start test         run the test suite
+#   ./start cli FILE     extract a boleto number from a PDF
+#
+# Creates the virtualenv and installs dependencies on first run, and
+# re-installs automatically whenever requirements.txt changes.
+
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+VENV="venv"
+PY="$VENV/bin/python"
+STAMP="$VENV/.requirements.sha256"
+
+info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
+die()  { printf '\033[1;31mxx\033[0m %s\n' "$1" >&2; exit 1; }
+
+# --- virtualenv + dependencies ----------------------------------------------
+# Every dependency is a self-contained wheel, so there is no system library to
+# install first - this is just Python.
+ensure_venv() {
+  if [ ! -x "$PY" ]; then
+    command -v python3 >/dev/null 2>&1 || die "python3 is not installed."
+    info "Creating virtualenv in ./$VENV ..."
+    python3 -m venv "$VENV"
+    "$PY" -m pip install --quiet --disable-pip-version-check --upgrade pip
+  fi
+
+  local want
+  want="$(shasum -a 256 requirements.txt requirements-dev.txt | shasum -a 256 | cut -d' ' -f1)"
+  if [ ! -f "$STAMP" ] || [ "$(cat "$STAMP")" != "$want" ]; then
+    info "Installing dependencies..."
+    "$PY" -m pip install --quiet --disable-pip-version-check -r requirements-dev.txt
+    echo "$want" > "$STAMP"
+  fi
+}
+
+# --- optional .env -----------------------------------------------------------
+load_env() {
+  if [ -f .env ]; then
+    info "Loading .env"
+    set -a
+    # shellcheck disable=SC1091
+    . ./.env
+    set +a
+  fi
+}
+
+ensure_venv
+load_env
+
+case "${1:-web}" in
+  web)
+    export FLASK_ENV="${FLASK_ENV:-development}"
+    export PORT="${PORT:-3000}"
+    info "Starting web app on http://localhost:$PORT  (Ctrl-C to stop)"
+    exec "$PY" app.py
+    ;;
+  test)
+    shift
+    info "Running tests..."
+    exec "$PY" -m pytest "$@"
+    ;;
+  cli)
+    shift
+    [ $# -gt 0 ] || die "Usage: ./start cli <file.pdf> [options]"
+    exec "$PY" -m boleto_extractor.cli "$@"
+    ;;
+  -h|--help|help)
+    sed -n '3,10p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+  *)
+    die "Unknown command '$1'. Try: ./start [web|test|cli] or ./start --help"
+    ;;
+esac

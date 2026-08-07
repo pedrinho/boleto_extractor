@@ -2,7 +2,24 @@
 
 🌐 **Try it online**: [https://boleto-extractor-xrva.onrender.com/](https://boleto-extractor-xrva.onrender.com/)
 
+<!-- Vercel (https://boleto-extractor.vercel.app/) is configured via vercel.json but
+     not deployed yet. Switch the link above once it is live. -->
+
 A Python tool to extract boleto numbers from Brazilian boleto PDF files. This tool reads 44-digit barcodes from PDFs and converts them to the standard 47-digit "linha digitável" format used for payments. The tool always returns 47-digit numbers ready for payment processing.
+
+## Quick Start
+
+```bash
+./start                    # web app on http://localhost:3000
+./start test               # run the test suite
+./start cli boleto.pdf     # extract a number from a PDF
+```
+
+That's it — no manual setup, and nothing to install system-wide. The script creates the
+`venv/` and installs dependencies on first run, then re-installs automatically whenever
+`requirements.txt` changes, so you never have to remember to activate anything.
+
+The rest of this README covers installing the package standalone and using it as a library.
 
 ## Features
 
@@ -20,8 +37,10 @@ A Python tool to extract boleto numbers from Brazilian boleto PDF files. This to
 
 ### Prerequisites
 
-- Python 3.7 or higher
+- Python 3.12 or higher
 - macOS, Linux, or Windows
+
+No system libraries are required — every dependency ships as a self-contained wheel.
 
 ### Setup
 
@@ -32,12 +51,7 @@ A Python tool to extract boleto numbers from Brazilian boleto PDF files. This to
    pip install git+https://github.com/pedrinho/boleto_extractor.git
    ```
 
-2. **Install zbar (for barcode reading):**
-   - **macOS:** `brew install zbar`
-   - **Ubuntu/Debian:** `sudo apt-get install libzbar0`
-   - **Windows:** Download from [zbar releases](https://github.com/NaturalHistoryMuseum/pyzbar/releases)
-
-3. **Clipboard functionality:** The clipboard copy feature requires `pyperclip` which is automatically installed with the package.
+2. **Clipboard functionality:** The clipboard copy feature requires `pyperclip` which is automatically installed with the package.
 
 #### Option 2: Install from Source
 
@@ -58,12 +72,7 @@ A Python tool to extract boleto numbers from Brazilian boleto PDF files. This to
    pip install -e .
    ```
 
-4. **Install zbar (for barcode reading):**
-   - **macOS:** `brew install zbar`
-   - **Ubuntu/Debian:** `sudo apt-get install libzbar0`
-   - **Windows:** Download from [zbar releases](https://github.com/NaturalHistoryMuseum/pyzbar/releases)
-
-5. **Clipboard functionality:** The clipboard copy feature requires `pyperclip` which is automatically installed with the package.
+4. **Clipboard functionality:** The clipboard copy feature requires `pyperclip` which is automatically installed with the package.
 
 ## Usage
 
@@ -166,7 +175,7 @@ The tool recognizes boleto numbers starting with common Brazilian bank codes:
 
 The tool uses a barcode-focused approach to extract boleto numbers:
 
-1. **Barcode Scanning**: Converts PDF pages to images and scans for barcodes using pyzbar
+1. **Barcode Scanning**: Converts PDF pages to images and scans for barcodes using zxing-cpp
 2. **Text Extraction**: As backup, extracts text from PDF and looks for 44-digit barcode patterns
 3. **Raw Content Analysis**: For encrypted PDFs, analyzes raw PDF content for barcode patterns
 4. **Validation**: Validates found numbers against known Brazilian bank codes
@@ -209,14 +218,12 @@ The tool uses a barcode-focused approach to extract boleto numbers:
 #### "Error scanning barcodes"
 
 **Possible causes:**
-- zbar not installed
 - Barcode image quality is too low
 - Barcode format not supported
 
 **Solutions:**
-1. Install zbar library (see installation instructions)
-2. Ensure the PDF has clear, high-resolution barcode images
-3. Try the `--verbose` flag for more detailed error information
+1. Ensure the PDF has clear, high-resolution barcode images
+2. Try the `--verbose` flag for more detailed error information
 
 ### Performance Tips
 
@@ -261,8 +268,7 @@ boleto-extractor encrypted.pdf --password mypassword --verbose --format --clipbo
 - **PyPDF2**: PDF text extraction
 - **pdfplumber**: Advanced PDF text and image extraction
 - **PyMuPDF**: PDF to image conversion (optional but recommended)
-- **opencv-python**: Image processing
-- **pyzbar**: Barcode reading
+- **zxing-cpp**: Barcode reading (Interleaved 2 of 5)
 - **Pillow**: Image handling
 - **numpy**: Numerical operations
 - **pyperclip**: Clipboard functionality (for copy to clipboard feature)
