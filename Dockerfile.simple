@@ -1,43 +1,24 @@
-# Simple Dockerfile for Render, with stable Debian and only essential system dependencies
-FROM python:3.11-slim-bullseye
+# Container image for Render.
+#
+# Every Python dependency ships a self-contained wheel, so there are no apt
+# packages to install: the previous libzbar/OpenCV system libraries went away
+# with the move from pyzbar+opencv to zxing-cpp.
+FROM python:3.13-slim-bookworm
 
-# Install system dependencies needed for OpenCV headless, pyzbar, and Pillow
-RUN apt-get update && apt-get install -y \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender1 \
-    libgomp1 \
-    libjpeg62-turbo \
-    libpng16-16 \
-    wget \
-    libzbar0 \
-    libzbar-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set working directory
 WORKDIR /app
 
-# Copy requirements first for better caching
+# Copy requirements first for better layer caching
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p templates static/css static/js
-
-# Expose port
 EXPOSE 3000
 
-# Set environment variables
 ENV FLASK_ENV=production
 ENV PORT=3000
 
-# Run the application
+# SECRET_KEY must be provided by the environment - the app refuses to start in
+# production without one.
 CMD ["sh", "-c", "gunicorn -w 2 -b 0.0.0.0:${PORT:-3000} app:app"]
-
-

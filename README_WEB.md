@@ -26,22 +26,29 @@ A web interface for the Brazilian Boleto Number Extractor, allowing users to upl
    ```
 
 3. **Open in Browser**:
-   Navigate to `http://localhost:5000`
+   Navigate to `http://localhost:3000`
 
 ### Production Deployment
 
-The application is ready for deployment on platforms like:
-- **Heroku**: Uses `Procfile` and `runtime.txt`
-- **Railway**: Compatible with Python apps
-- **Render**: Supports Flask applications
-- **DigitalOcean App Platform**: Python app support
+Two deployment targets are supported from a single dependency set:
+
+- **Render** (currently live): builds `Dockerfile.simple` and serves via gunicorn.
+- **Vercel**: configured by `vercel.json` and `.python-version`. Vercel
+  auto-detects the WSGI `app` object in `app.py`, so it needs no extra entrypoint
+  or WSGI server.
+
+Because every dependency is a self-contained wheel with no native system library,
+the same `requirements.txt` works on both, and on any other host that runs Python.
 
 #### Environment Variables
 
 Set these environment variables in production:
-- `SECRET_KEY`: A secure secret key for Flask sessions
+- `SECRET_KEY`: **Required.** Signs the session cookie; the app refuses to start
+  in production without it.
 - `FLASK_ENV`: Set to `production` for production deployment
-- `PORT`: Port number (usually set automatically by the platform)
+- `MAX_UPLOAD_MB`: Upload ceiling. Vercel rejects request bodies over 4.5MB
+  before the app is reached, so keep this at 4 or below there.
+- `PORT`: Port number (local only; set automatically by the platform)
 
 ## API Usage
 
@@ -116,9 +123,12 @@ boleto/
 │   │   └── style.css     # Stylesheet
 │   └── js/
 │       └── script.js     # JavaScript functionality
-├── requirements.txt      # Python dependencies
-├── Procfile             # Heroku deployment
-├── runtime.txt          # Python version specification
+├── requirements.txt      # Runtime dependencies (pinned)
+├── requirements-dev.txt  # Test dependencies
+├── vercel.json          # Vercel function config
+├── Dockerfile.simple    # Render container image
+├── .python-version      # Python version specification
+├── start                # One-stop local launcher
 └── README_WEB.md        # This file
 ```
 
@@ -136,7 +146,7 @@ boleto/
 3. **Raw Content Analysis**: For encrypted or complex PDFs
 
 ### Security Features
-- File size limits (16MB maximum)
+- File size limits (configurable via `MAX_UPLOAD_MB`, default 4MB)
 - File type validation (PDF only)
 - Temporary file cleanup
 - Secure password handling
