@@ -147,15 +147,16 @@ class TestApiGate(unittest.TestCase):
             self.assertEqual(resp.status_code, 403)
 
     def test_api_accepts_correct_key(self):
-        """The right key gets past the gate; an empty payload then yields no results."""
+        """The right key gets past the gate."""
         env = {'ENABLE_PUBLIC_API': 'true', 'API_KEY': 'correct-key'}
         with patch.dict(os.environ, env, clear=False):
             client = app_module.app.test_client()
-            resp = client.post('/api/extract', json={'file': ''},
+            import base64
+            payload = base64.b64encode(BRADESCO.read_bytes()).decode()
+            resp = client.post('/api/extract', json={'file': payload},
                                headers={'X-API-Key': 'correct-key'})
-            self.assertNotEqual(resp.status_code, 403)
             self.assertEqual(resp.status_code, 200)
-            self.assertEqual(resp.get_json()['boleto_numbers'], [])
+            self.assertIn(BRADESCO_EXPECTED, resp.get_json()['boleto_numbers'])
 
     def test_api_rejects_bad_base64(self):
         with patch.dict(os.environ, {'ENABLE_PUBLIC_API': 'true'}, clear=False):

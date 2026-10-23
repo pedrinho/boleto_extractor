@@ -4,54 +4,60 @@ Brazilian Boleto Number Extractor
 A Python library to extract boleto numbers from Brazilian boleto PDF files.
 """
 
+from .barcode import BoletoInfo
 from .extractor import BoletoExtractor
+from .pdf import InvalidPdf, PasswordRequired, PdfError, WrongPassword
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__ = "Pedro"
 __email__ = ""
 
-# Main class to import
-__all__ = ["BoletoExtractor"]
+__all__ = [
+    "BoletoExtractor",
+    "BoletoInfo",
+    "PdfError",
+    "InvalidPdf",
+    "PasswordRequired",
+    "WrongPassword",
+    "extract_boleto_numbers",
+    "find_boleto_numbers_in_text",
+    "is_valid_boleto_number",
+]
 
 # Convenience function for quick extraction
-def extract_boleto_numbers(pdf_path, password=None, verbose=False, format_output=False):
+def extract_boleto_numbers(pdf_path, password=None):
     """
     Convenience function to extract boleto numbers from a PDF file.
-    
+
     Args:
         pdf_path (str): Path to the PDF file
         password (str, optional): Password for encrypted PDF files
-        verbose (bool): Enable verbose logging
-        format_output (bool): Format the output with spaces
-        
+
     Returns:
-        list: List of extracted boleto numbers
+        list: List of extracted boleto numbers (linha digitável)
     """
-    extractor = BoletoExtractor()
-    return extractor.extract_boleto_numbers(pdf_path, password)
+    return BoletoExtractor().extract_boleto_numbers(pdf_path, password)
 
 def find_boleto_numbers_in_text(text):
     """
     Convenience function to find boleto numbers in text.
-    
+
     Args:
-        text (str): Text to search for boleto numbers
-        
+        text (str): Text to search for a printed linha digitável
+
     Returns:
-        list: List of found boleto numbers
+        list: The 44-digit barcodes of the boletos found
     """
-    extractor = BoletoExtractor()
-    return extractor.find_boleto_numbers_in_text(text)
+    return BoletoExtractor().find_boleto_numbers_in_text(text)
 
 def is_valid_boleto_number(number):
     """
-    Convenience function to validate a boleto number.
-    
+    Convenience function to validate a boleto barcode.
+
     Args:
-        number (str): Boleto number to validate
-        
+        number (str): 44-digit barcode to validate
+
     Returns:
         bool: True if valid, False otherwise
     """
-    extractor = BoletoExtractor()
-    return extractor.is_valid_boleto_number(number) 
+    return BoletoExtractor().is_valid_boleto_number(number)
