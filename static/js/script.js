@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitBtn');
     const loadingSpinner = document.getElementById('loadingSpinner');
     const fileInputWrapper = document.querySelector('.file-input-wrapper');
+    const fileText = fileInputWrapper.querySelector('.file-text');
+
+    // Some systems report an empty MIME type for PDFs, so the extension counts too.
+    function isPdf(file) {
+        return file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    }
 
     // File input change handler
     fileInput.addEventListener('change', function(e) {
@@ -31,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const files = e.dataTransfer.files;
         if (files.length > 0) {
             const file = files[0];
-            if (file.type === 'application/pdf') {
+            if (isPdf(file)) {
                 fileInput.files = files;
                 handleFileSelect(file);
             } else {
@@ -67,8 +73,16 @@ document.addEventListener('DOMContentLoaded', function() {
         this.submit();
     });
 
-    // Copy to clipboard functionality
-    window.copyToClipboard = function(text) {
+    // Copy buttons carry their text in data-copy. Inline onclick handlers would
+    // be blocked by the Content-Security-Policy, so one delegated listener it is.
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('.copy-btn[data-copy]');
+        if (button) {
+            copyToClipboard(button.dataset.copy);
+        }
+    });
+
+    function copyToClipboard(text) {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(text).then(function() {
                 showToast('Copied to clipboard!', 'success');
@@ -79,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             fallbackCopyToClipboard(text);
         }
-    };
+    }
 
     // Fallback copy function for older browsers
     function fallbackCopyToClipboard(text) {
@@ -111,25 +125,25 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleFileSelect(file) {
         if (!file) return;
 
-        if (file.type !== 'application/pdf') {
+        if (!isPdf(file)) {
             showToast('Please select a PDF file', 'error');
             fileInput.value = '';
             return;
         }
 
-        // Update file preview
-        filePreview.innerHTML = `
-            <i class="fas fa-file-pdf"></i>
-            <strong>${file.name}</strong>
-            <span>(${formatFileSize(file.size)})</span>
-        `;
+        // Update file preview. Built from nodes, not HTML: the file name is
+        // arbitrary text.
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-file-pdf';
+        const name = document.createElement('strong');
+        name.textContent = file.name;
+        const size = document.createElement('span');
+        size.textContent = `(${formatFileSize(file.size)})`;
+        filePreview.replaceChildren(icon, ' ', name, ' ', size);
         filePreview.classList.add('show');
 
         // Update file input wrapper text
-        const fileText = filePreview.querySelector('.file-text');
-        if (fileText) {
-            fileText.textContent = file.name;
-        }
+        fileText.textContent = file.name;
     }
 
     // Format file size
@@ -154,10 +168,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const icon = type === 'success' ? 'check-circle' : 
                     type === 'error' ? 'exclamation-circle' : 'info-circle';
         
-        toast.innerHTML = `
-            <i class="fas fa-${icon}"></i>
-            ${message}
-        `;
+        const iconEl = document.createElement('i');
+        iconEl.className = `fas fa-${icon}`;
+        toast.append(iconEl, message);
 
         // Add to page
         document.body.appendChild(toast);
@@ -172,51 +185,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         }, 3000);
     }
-
-    // API testing functionality (for development)
-    window.testAPI = function() {
-        const testFile = fileInput.files[0];
-        if (!testFile) {
-            showToast('Please select a file first', 'error');
-            return;
-        }
-
-        // Convert file to base64
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const base64 = e.target.result.split(',')[1];
-            
-            const requestData = {
-                file: base64,
-                password: document.getElementById('password').value,
-                format: document.getElementById('format').checked
-            };
-
-            fetch('/api/extract', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(`API Success: Found ${data.count} boleto(s)`, 'success');
-                    console.log('API Response:', data);
-                } else {
-                    showToast(`API Error: ${data.error}`, 'error');
-                    console.error('API Error:', data);
-                }
-            })
-            .catch(error => {
-                showToast(`API Error: ${error.message}`, 'error');
-                console.error('API Error:', error);
-            });
-        };
-        
-        reader.readAsDataURL(testFile);
-    };
 
     // Auto-hide flash messages after 5 seconds
     const flashMessages = document.querySelectorAll('.flash-message');
@@ -242,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function validateForm() {
         const hasFile = fileInput.files.length > 0;
-        const isValidFile = hasFile && fileInput.files[0].type === 'application/pdf';
+        const isValidFile = hasFile && isPdf(fileInput.files[0]);
         
         if (isValidFile) {
             submitBtn.disabled = false;
@@ -255,8 +223,3 @@ document.addEventListener('DOMContentLoaded', function() {
     validateForm();
 });
 
-// Utility functions for external use
-window.BoletoExtractor = {
-    copyToClipboard: window.copyToClipboard,
-    testAPI: window.testAPI
-};

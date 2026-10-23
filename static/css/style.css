@@ -405,6 +405,26 @@ body {
     line-height: 1.4;
 }
 
+.boleto-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.boleto-details dt {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.boleto-details dd {
+    font-weight: 600;
+    color: #333;
+}
+
 /* API Section */
 .api-section {
     margin-top: 50px;

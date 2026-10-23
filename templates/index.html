@@ -6,7 +6,7 @@
     <title>Boleto Extractor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
     <!-- Fork me on GitHub ribbon -->
@@ -19,19 +19,22 @@
         </header>
 
         <main class="main-content">
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="flash-messages">
-                        {% for category, message in messages %}
-                            <div class="flash-message flash-{{ category }}">
-                                <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% elif category == 'info' %}info-circle{% else %}bell{% endif %}"></i>
-                                {{ message }}
-                            </div>
-                        {% endfor %}
+            <!-- Messages -->
+            {% macro message(category, icon, text) %}
+                <div class="flash-messages">
+                    <div class="flash-message flash-{{ category }}">
+                        <i class="fas fa-{{ icon }}"></i>
+                        {{ text }}
                     </div>
-                {% endif %}
-            {% endwith %}
+                </div>
+            {% endmacro %}
+            {% if error %}
+                {{ message('error', 'exclamation-circle', error) }}
+            {% elif notice %}
+                {{ message('info', 'info-circle', notice) }}
+            {% elif results %}
+                {{ message('success', 'check-circle', 'Found %d boleto number(s)'|format(results|length)) }}
+            {% endif %}
 
             <!-- Upload Form -->
             <div class="upload-section">
@@ -58,7 +61,7 @@
 
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" id="format" name="format">
+                            <input type="checkbox" id="format" name="format"{% if format_output %} checked{% endif %}>
                             <span class="checkmark"></span>
                             Format output with spaces
                         </label>
@@ -73,20 +76,37 @@
             </div>
 
             <!-- Results Section -->
-            {% if session.results %}
+            {% if results %}
                 <div class="results-section">
                     <h2><i class="fas fa-list-check"></i> Extracted Boleto Numbers</h2>
                     <div class="results-grid">
-                        {% for result in session.results %}
+                        {% for boleto in results %}
+                            {% set shown = boleto.formatted if format_output else boleto.linha %}
                             <div class="result-card">
                                 <div class="result-header">
                                     <span class="result-number">#{{ loop.index }}</span>
-                                    <button class="copy-btn" onclick="copyToClipboard('{{ result.formatted if session.format_output else result.raw }}')">
+                                    <button type="button" class="copy-btn" data-copy="{{ shown }}" aria-label="Copy boleto number">
                                         <i class="fas fa-copy"></i>
                                     </button>
                                 </div>
                                 <div class="result-content">
-                                    <div class="boleto-number">{{ result.formatted if session.format_output else result.raw }}</div>
+                                    <div class="boleto-number">{{ shown }}</div>
+                                    <dl class="boleto-details">
+                                        <div>
+                                            <dt>Type</dt>
+                                            <dd>{{ boleto.kind_label }}{% if boleto.segment %} &middot; {{ boleto.segment }}{% endif %}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Amount</dt>
+                                            <dd>{{ boleto.amount|brl if boleto.amount is not none else 'Not specified' }}</dd>
+                                        </div>
+                                        {% if boleto.kind == 'bank' %}
+                                        <div>
+                                            <dt>Due date</dt>
+                                            <dd>{{ boleto.due_date.strftime('%d/%m/%Y') if boleto.due_date else 'Not specified' }}</dd>
+                                        </div>
+                                        {% endif %}
+                                    </dl>
                                 </div>
                             </div>
                         {% endfor %}
@@ -101,7 +121,7 @@
             <p>&copy; 2024 Boleto Extractor. Open source tool for Brazilian boleto processing.</p>
             <div class="privacy-disclaimer">
                 <i class="fas fa-shield-alt"></i>
-                <span>Privacy Notice: We do not save, store, or retain any information from your uploaded boleto files. All processing is done locally and files are discarded immediately after extraction.</span>
+                <span>Privacy Notice: Your file is processed in memory on our server and discarded as soon as the numbers are extracted. Nothing from it is saved, logged, or kept in cookies.</span>
             </div>
         </footer>
     </div>
