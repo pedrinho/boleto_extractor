@@ -37,10 +37,13 @@ MARGIN = 40.0
 
 # The payloads under test. Each is a 44-digit barcode; the first is the one the
 # existing unit tests already use, so its expected output is independently known.
+# The arrecadação one (utility bill, starts with 8) carries a valid general check
+# digit, like the real utility bills it stands in for.
 FIXTURES = {
-    'boleto_bradesco.pdf': '19797116900000386000000004572849356277103564',
-    'boleto_bb.pdf':       '00191234500000150000000123456789012345678901',
-    'boleto_itau.pdf':     '34191098700002500001234567890123456789012345',
+    'boleto_bradesco.pdf':    '19797116900000386000000004572849356277103564',
+    'boleto_bb.pdf':          '00191234500000150000000123456789012345678901',
+    'boleto_itau.pdf':        '34191098700002500001234567890123456789012345',
+    'boleto_arrecadacao.pdf': '82650000001234500011234567890123456789012345',
 }
 
 

@@ -2,7 +2,7 @@
 
 🌐 **Try it online**: [https://boleto-extractor.vercel.app/](https://boleto-extractor.vercel.app/)
 
-A Python tool to extract boleto numbers from Brazilian boleto PDF files. This tool reads 44-digit barcodes from PDFs and converts them to the standard 47-digit "linha digitável" format used for payments. The tool always returns 47-digit numbers ready for payment processing.
+A Python tool to extract boleto numbers from Brazilian boleto PDF files. This tool reads 44-digit barcodes from PDFs and converts them to the "linha digitável" format used for payments: 47 digits for bank boletos, 48 digits for utility/tax (arrecadação) boletos such as gas, power and water bills.
 
 ## Quick Start
 
@@ -21,7 +21,7 @@ The rest of this README covers installing the package standalone and using it as
 ## Features
 
 - **Barcode-Focused Extraction**: Primarily reads 44-digit barcodes from PDFs
-- **Automatic Conversion**: Converts 44-digit barcodes to 47-digit "linha digitável" using official algorithms
+- **Automatic Conversion**: Converts 44-digit barcodes to 47-digit (bank) or 48-digit (arrecadação) "linha digitável" using official algorithms
 - **Multiple Extraction Methods**: Barcode scanning, text extraction, and raw PDF content analysis
 - **Barcode Detection**: Reads Interleaved 2 of 5 (I25) and other common barcode formats
 - **PDF Processing**: Handles both text-based and image-based PDFs
@@ -138,7 +138,7 @@ Found 1 boleto number(s):
 
 ## Supported Boleto Formats
 
-The tool focuses on extracting 44-digit barcodes and converting them to 47-digit "linha digitável":
+The tool focuses on extracting 44-digit barcodes and converting them to "linha digitável" (47 digits for bank boletos, 48 for arrecadação boletos):
 
 ### 44-Digit Barcode (Input)
 - **Format**: `XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX`
@@ -150,8 +150,13 @@ The tool focuses on extracting 44-digit barcodes and converting them to 47-digit
 - **Example**: `19790000050457284935662771035649711690000038600`
 - **Usage**: Standard format for payments and manual entry
 
+### 48-Digit Linha Digitável (Arrecadação Output)
+Utility and tax bills (gas, power, water, city taxes) use barcodes starting with `8`.
+- **Format**: `XXXXXXXXXXX-X XXXXXXXXXXX-X XXXXXXXXXXX-X XXXXXXXXXXX-X`
+- **Example**: `826500000011234500011239456789012345567890123456`
+
 ### Conversion Process
-The tool automatically converts 44-digit barcodes to 47-digit "linha digitável" using the official Modulo 10 algorithm for check digit calculation.
+Bank barcodes are converted to the 47-digit "linha digitável" using the official Modulo 10 algorithm for check digit calculation. Arrecadação barcodes are split into four 11-digit blocks, each followed by a check digit computed with Modulo 10 or Modulo 11, as selected by the barcode's third digit.
 
 ### Supported Bank Codes
 The tool recognizes boleto numbers starting with common Brazilian bank codes:
@@ -176,8 +181,8 @@ The tool uses a barcode-focused approach to extract boleto numbers:
 2. **Text Extraction**: As backup, extracts text from PDF and looks for 44-digit barcode patterns
 3. **Raw Content Analysis**: For encrypted PDFs, analyzes raw PDF content for barcode patterns
 4. **Validation**: Validates found numbers against known Brazilian bank codes
-5. **Conversion**: Converts 44-digit barcodes to 47-digit "linha digitável" using Modulo 10 algorithm
-6. **Output**: Returns clean 47-digit numbers ready for payment processing
+5. **Conversion**: Converts 44-digit barcodes to 47-digit (bank) or 48-digit (arrecadação) "linha digitável"
+6. **Output**: Returns clean digit-only numbers ready for payment processing
 
 ## Troubleshooting
 

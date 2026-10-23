@@ -280,6 +280,9 @@ class BoletoExtractor:
         
         if len(number) >= 3 and number[:3] in known_bank_codes:
             return True
+        elif number[0] == '8':
+            # Arrecadação barcode (utilities, taxes): no bank code to check
+            return True
         else:
             # Unknown bank code, but still return True with a warning
             logger.warning(f"Unknown bank code '{number[:3]}' in boleto number: {number}")
@@ -353,11 +356,25 @@ class BoletoExtractor:
 
     def barcode_to_linha_digitavel(self, barcode: str) -> Optional[str]:
         """
-        Convert a 44-digit boleto barcode to the 47-digit linha digitável.
+        Convert a 44-digit boleto barcode to its linha digitável: 47 digits for
+        bank boletos, 48 digits for arrecadação (utility/tax) boletos.
         Returns None if the input is not 44 digits.
         """
         if not barcode or len(barcode) != 44 or not barcode.isdigit():
             return None
+
+        def calc_mod10(block):
+            s = 0
+            mult = 2
+            for d in reversed(block):
+                add = int(d) * mult
+                if add > 9:
+                    add = (add // 10) + (add % 10)
+                s += add
+                mult = 1 if mult == 2 else 2
+            dv = (10 - (s % 10)) % 10
+            return str(dv)
+
         # Bank boletos (first digit != 8)
         if barcode[0] != '8':
             # Fields:
@@ -367,17 +384,6 @@ class BoletoExtractor:
             # General structure: AAAAA BBBBB CCCCCCCCCC DDDDDDDDDD EEEEEEEEEE F
             # Where F is the general check digit (barcode[4])
             # Linha digitável: 5 10 10 1 15 = 47
-            def calc_mod10(block):
-                s = 0
-                mult = 2
-                for d in reversed(block):
-                    add = int(d) * mult
-                    if add > 9:
-                        add = (add // 10) + (add % 10)
-                    s += add
-                    mult = 1 if mult == 2 else 2
-                dv = (10 - (s % 10)) % 10
-                return str(dv)
             # Field 1
             f1 = barcode[0:4] + barcode[19:24]
             f1_dv = calc_mod10(f1)
@@ -392,8 +398,30 @@ class BoletoExtractor:
             # Field 5: due date factor + value
             f5 = barcode[5:19]
             return f"{f1}{f1_dv}{f2}{f2_dv}{f3}{f3_dv}{f4}{f5}"
-        # For convenience, return None for non-bank boletos (convenio/arrecadacao)
-        return None
+
+        # Arrecadação boletos (first digit == 8): utilities, taxes, etc.
+        # The barcode is split into four 11-digit blocks, each followed by its own
+        # check digit: 11+1 11+1 11+1 11+1 = 48.
+        # The third digit (value identifier) picks the check digit algorithm:
+        # 6/7 -> modulo 10, 8/9 -> modulo 11.
+        def calc_mod11(block):
+            s = 0
+            mult = 2
+            for d in reversed(block):
+                s += int(d) * mult
+                mult = 2 if mult == 9 else mult + 1
+            rest = s % 11
+            dv = 0 if rest in (0, 1) else 11 - rest
+            return str(dv)
+
+        if barcode[2] in '67':
+            calc_dv = calc_mod10
+        elif barcode[2] in '89':
+            calc_dv = calc_mod11
+        else:
+            return None
+        blocks = [barcode[i:i + 11] for i in range(0, 44, 11)]
+        return ''.join(block + calc_dv(block) for block in blocks)
 
     def extract_boleto_numbers(self, pdf_path: str, password: str = None) -> List[str]:
         """
@@ -404,7 +432,8 @@ class BoletoExtractor:
             password (str, optional): Password for encrypted PDF files
             
         Returns:
-            List[str]: List of extracted 47-digit boleto numbers (linha digitável)
+            List[str]: List of extracted boleto numbers (linha digitável): 47 digits
+                for bank boletos, 48 digits for arrecadação boletos
         """
         all_numbers = []
         
@@ -430,11 +459,11 @@ class BoletoExtractor:
             if num not in unique_numbers:
                 unique_numbers.append(num)
         
-        # Convert all 44-digit barcodes to 47-digit linha digitável
+        # Convert all 44-digit barcodes to linha digitável
         result = []
         for num in unique_numbers:
             if len(num) == 44:
-                # Convert 44-digit barcode to 47-digit linha digitável
+                # Convert 44-digit barcode to 47/48-digit linha digitável
                 linha = self.barcode_to_linha_digitavel(num)
                 if linha:
                     result.append(linha)
@@ -446,14 +475,22 @@ class BoletoExtractor:
 
     def format_boleto_number(self, number: str) -> str:
         """
-        Format a 47-digit boleto number in Brazilian "linha digitável" format.
+        Format a 47-digit (bank) or 48-digit (arrecadação) boleto number in
+        Brazilian "linha digitável" format.
         
         Args:
-            number (str): 47-digit boleto number to format
+            number (str): 47- or 48-digit boleto number to format
             
         Returns:
             str: Formatted boleto number in Brazilian standard format
         """
+        if number and len(number) == 48:
+            # Arrecadação: four 11-digit blocks, each followed by its check digit
+            # XXXXXXXXXXX-X XXXXXXXXXXX-X XXXXXXXXXXX-X XXXXXXXXXXX-X
+            return " ".join(
+                f"{number[i:i + 11]}-{number[i + 11]}" for i in range(0, 48, 12)
+            )
+
         if not number or len(number) != 47:
             return number
         

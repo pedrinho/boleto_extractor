@@ -18,7 +18,8 @@ from boleto_extractor.extractor import BoletoExtractor
 
 FIXTURES = Path(__file__).parent / 'fixtures'
 
-# barcode payload -> expected 47-digit linha digitavel.
+# barcode payload -> expected linha digitavel (47 digits for bank boletos, 48 for
+# arrecadacao/utility boletos).
 # The Bradesco value is corroborated by the worked example in README.md
 # ("19790.00005 04572.84935 66277.10356 4 9711690000038600").
 CASES = [
@@ -36,6 +37,11 @@ CASES = [
         'boleto_itau.pdf',
         '34191098700002500001234567890123456789012345',
         '34191234546789012345767890123457109870000250000',
+    ),
+    (
+        'boleto_arrecadacao.pdf',
+        '82650000001234500011234567890123456789012345',
+        '826500000011234500011239456789012345567890123456',
     ),
 ]
 
@@ -63,13 +69,13 @@ class TestEndToEndExtraction(unittest.TestCase):
                 self.assertIn(barcode, found)
 
     def test_full_extraction_returns_linha_digitavel(self):
-        """The public entry point returns the expected 47-digit number."""
+        """The public entry point returns the expected linha digitavel."""
         for name, _, expected in CASES:
             with self.subTest(fixture=name):
                 results = self.extractor.extract_boleto_numbers(str(FIXTURES / name))
                 self.assertIn(expected, results)
                 for number in results:
-                    self.assertEqual(len(number), 47)
+                    self.assertEqual(len(number), len(expected))
                     self.assertTrue(number.isdigit())
 
     def test_conversion_matches_decoded_barcode(self):

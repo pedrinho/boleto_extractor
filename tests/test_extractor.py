@@ -101,10 +101,22 @@ class TestBoletoExtractor(unittest.TestCase):
                 result = self.extractor.barcode_to_linha_digitavel(barcode)
                 self.assertIsNone(result)
 
-    def test_barcode_to_linha_digitavel_convenio(self):
-        """Test conversion of convenio barcode (starts with 8)."""
-        convenio_barcode = "80000000000000000000000000000000000000000000"
-        result = self.extractor.barcode_to_linha_digitavel(convenio_barcode)
+    def test_barcode_to_linha_digitavel_arrecadacao_mod10(self):
+        """Arrecadação barcode (starts with 8) with value identifier 6 uses modulo 10."""
+        barcode = "82650000001234500011234567890123456789012345"
+        result = self.extractor.barcode_to_linha_digitavel(barcode)
+        self.assertEqual(result, "826500000011234500011239456789012345567890123456")
+
+    def test_barcode_to_linha_digitavel_arrecadacao_mod11(self):
+        """Arrecadação barcode with value identifier 8 uses modulo 11."""
+        barcode = "81800000000500000022026100800000000000098765"
+        result = self.extractor.barcode_to_linha_digitavel(barcode)
+        self.assertEqual(result, "818000000004500000022022610080000008000000987654")
+
+    def test_barcode_to_linha_digitavel_arrecadacao_invalid_identifier(self):
+        """Arrecadação barcodes with a value identifier other than 6-9 are rejected."""
+        barcode = "80000000000000000000000000000000000000000000"
+        result = self.extractor.barcode_to_linha_digitavel(barcode)
         self.assertIsNone(result)
 
     def test_format_boleto_number_valid(self):
@@ -113,6 +125,13 @@ class TestBoletoExtractor(unittest.TestCase):
         result = self.extractor.format_boleto_number(number)
         # The actual format from the implementation
         expected = "19790.00005 04572.84935 66277.10356 4 9711690000038600"
+        self.assertEqual(result, expected)
+
+    def test_format_boleto_number_arrecadacao(self):
+        """Test formatting of a 48-digit arrecadação boleto number."""
+        number = "826500000011234500011239456789012345567890123456"
+        result = self.extractor.format_boleto_number(number)
+        expected = "82650000001-1 23450001123-9 45678901234-5 56789012345-6"
         self.assertEqual(result, expected)
 
     def test_format_boleto_number_invalid_length(self):
