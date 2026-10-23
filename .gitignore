@@ -35,3 +35,7 @@ htmlcov/
 
 # Vercel
 .vercel 
+# Packaging
+build/
+dist/
+*.egg-info/
